@@ -2,11 +2,10 @@ import React from 'react';
 import NavbarUI from './ui/Navbar';
 
 const Navigate = ({ accounts, web3Handler }) => {
-
+  const title = "RealEstate"
   return (
     <>
-      const title = "RealEstate"
-      <NavbarUI title={title} web3Handler={web3Handler} accounts={accounts} />
+      <NavbarUI logo={'./house_logo.png'} title={title} web3Handler={web3Handler} accounts={accounts} />
     </>
   );
 };

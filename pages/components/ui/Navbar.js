@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 
-const NavbarUI = ({ title, web3Handler, accounts }) => {
+const NavbarUI = ({ logo, title, web3Handler, accounts }) => {
     return (
         <div className="navbar bg-base-500 shadow-lg ">
             <div className="navbar-start">
@@ -18,7 +18,7 @@ const NavbarUI = ({ title, web3Handler, accounts }) => {
                     </ul>
                 </div>
                 <a className="btn btn-square btn-ghost">
-                    <img src="./market.png" width="30" height="30" className="" alt="" />
+                    <img src={logo} width="35" height="35" className="" alt="logo" />
                 </a>
                 <a className="btn btn-ghost text-xl">{title}</a>
             </div>
