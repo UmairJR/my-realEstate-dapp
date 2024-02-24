@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 
-const NavbarUI = ({ logo, title, web3Handler, accounts }) => {
+const NavbarUI = ({ logo, title, web3Handler, account }) => {
     return (
         <div className="navbar bg-base-500 shadow-lg ">
             <div className="navbar-start">
@@ -10,11 +10,12 @@ const NavbarUI = ({ logo, title, web3Handler, accounts }) => {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" /></svg>
                     </div>
                     <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                    <li><Link href="/" >Home </Link></li>
-                    <li><Link href="/" >Create</Link></li>
-                    <li><Link href="/" >List</Link></li>
-                    <li><Link href="/" >List</Link></li>
-                    <li><Link href="/" >List</Link></li>
+                    <li><Link href="/" >Discover </Link></li>
+                    <li><Link href="/add" >Add Property</Link></li>
+                    <li><Link href="/owned-property" >Owned Property</Link></li>
+                    <li><Link href="/listed-property" >Listed Property</Link></li>
+                    <li><Link href="/sold-property" >Sold Property</Link></li>
+                    <li><Link href="/my-purchases" >Purchased Property</Link></li>
                     </ul>
                 </div>
                 <a className="btn btn-square btn-ghost">
@@ -24,17 +25,18 @@ const NavbarUI = ({ logo, title, web3Handler, accounts }) => {
             </div>
             <div className="navbar-center hidden lg:flex">
                 <ul className="menu menu-horizontal px-1">
-                    <li><Link href="/" >Home </Link></li>
-                    <li><Link href="/" >Create</Link></li>
-                    <li><Link href="/" >List</Link></li>
-                    <li><Link href="/" >List</Link></li>
-                    <li><Link href="/" >List</Link></li>
+                    <li><Link href="/" >Discover </Link></li>
+                    <li><Link href="/add" >Add Property</Link></li>
+                    <li><Link href="/owned-property" >Owned Property</Link></li>
+                    <li><Link href="/listed-property" >Listed Property</Link></li>
+                    <li><Link href="/sold-property" >Sold Property</Link></li>
+                    <li><Link href="/my-purchases" >Purchased Property</Link></li>
                 </ul>
             </div>
             <div className="navbar-end">
-                {accounts ? (
+                {account ? (
                     <button className="btn btn-primary btn-outline">
-                        {accounts[0].slice(0, 5) + '...' + accounts[0].slice(38, 42)}
+                        {account.slice(0, 5) + '...' + account.slice(38, 42)}
                     </button>
                 ) : (
                     <>
