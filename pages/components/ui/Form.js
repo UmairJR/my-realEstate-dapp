@@ -14,7 +14,7 @@ const FormUI = ({ setName, setDescription, setPrice, disabled, uploadToW3Storage
                 />
                 <input
                     type="text"
-                    placeholder="Enter NFT Name"
+                    placeholder="Enter Property Name"
                     onChange={(e) => setName(e.target.value)}
                     className="input input-bordered input-primary w-full max-w-lg"
                     disabled={disabled}
@@ -22,22 +22,22 @@ const FormUI = ({ setName, setDescription, setPrice, disabled, uploadToW3Storage
                 <textarea
                     className="textarea textarea-primary textarea-sm w-full max-w-lg"
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Enter NFT Description"
+                    placeholder="Enter Property Description"
                     disabled={disabled}
                 ></textarea>
                 <input
                     type="number"
-                    placeholder="Enter NFT Price in ETH"
+                    placeholder="Enter Property Price in ETH"
                     onChange={(e) => setPrice(e.target.value)}
                     className="input input-bordered input-primary w-full max-w-lg"
                     disabled={disabled}
                 />
 
-                <button className='btn btn-primary'
+                <button className='btn btn-primary sm:btn-sm md:btn-md lg:btn-md btn-wide'
                     onClick={createNFT}
                     disabled={disabled}
                 >
-                    Create & List NFT!
+                    Add Property!
                 </button>
                 <a className='text-center'>
                     {loading ? (

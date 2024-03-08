@@ -3,12 +3,54 @@ import axios from 'axios';
 import CardUI from './components/ui/Card';
 import { useRouter } from 'next/router';
 import { useToast } from '@chakra-ui/react'
+import { database } from './utils/firebaseConfig';
+import { get, set, ref, update } from 'firebase/database';
 
 const OwnedProperty = ({ web3, account, realEstate, escrow, escrow_address, realEstate_address }) => {
     const [loading, setLoading] = useState(true);
+    const [txLoading, setTxLoading] = useState(false);
     const [properties, setProperties] = useState([]);
     const router = useRouter();
     const toast = useToast();
+
+    const addInFirebase = async (propId) => {
+        const propStatusRef = ref(database, `/propStatus/${propId}`);
+        set(propStatusRef, {
+            hasBought: false,
+            hasInspected: false,
+            hasSold: false,
+        })
+            .then(() => {
+                console.log("Added Successfully in Firebase!!");
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+    const updateInFirebase = async (propId, hasBought, hasInspected, hasSold) => {
+        const propStatusRef = ref(database, `/propStatus/${propId}`);
+
+        const updates = {};
+        if (hasBought !== undefined) {
+            updates.hasBought = hasBought;
+        }
+        if (hasInspected !== undefined) {
+            updates.hasInspected = hasInspected;
+        }
+        if (hasSold !== undefined) {
+            updates.hasSold = hasSold;
+        }
+
+        update(propStatusRef, updates)
+            .then(() => {
+                console.log("Updated Successfully in Firebase!!");
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    };
+
+
 
     const loadOwnedProperties = async () => {
         console.log('Loading....');
@@ -19,7 +61,7 @@ const OwnedProperty = ({ web3, account, realEstate, escrow, escrow_address, real
             for (let i = 1; i <= totalItems; i++) {
                 const prop = await escrow.methods.props(i).call();
                 console.log("Prop: ", prop);
-                if (!prop.sold && prop.seller.toLowerCase() === account) {
+                if (prop.seller.toLowerCase() === account) {
                     const uri = await realEstate.methods.tokenURI(prop.tokenId).call();
                     console.log("URI: ", uri);
                     const response = await axios.get(uri);
@@ -27,20 +69,23 @@ const OwnedProperty = ({ web3, account, realEstate, escrow, escrow_address, real
                     // console.log("RESPONSE JSON: ",response.json())
                     const metadata = response.data;
                     console.log("METADATA: ", metadata);
+                    const ownerOf = await realEstate.methods.ownerOf(prop.tokenId).call();
+                    console.log(prop.propertyId + ": " + ownerOf);
                     // const totalPrice = await mpContract.methods.getTotalPrice(item.itemId).call();
                     // console.log("TOTALPRICE: ", totalPrice);
                     const totalPrice = prop.price;
                     const totalPriceEther = web3.utils.fromWei(totalPrice.toString(), 'ether');
                     props.push({
                         totalPrice,
-                        totalPriceEther,
+                        price: totalPriceEther,
                         propId: prop.propertyId,
                         seller: prop.seller,
                         buyer: prop.buyer,
                         name: metadata.name,
                         description: metadata.description,
                         image: metadata.image,
-                        isListed: prop.propertyInfo.isListed
+                        isListed: prop.propertyInfo.isListed,
+                        sold: prop.sold
                     })
                 }
             }
@@ -56,6 +101,7 @@ const OwnedProperty = ({ web3, account, realEstate, escrow, escrow_address, real
     const listProp = async (prop) => {
         console.log("Listing....")
         try {
+            setTxLoading(true);
             console.log(prop.propId)
             const tx = await escrow.methods.listProperty(prop.propId).send({
                 from: account
@@ -69,7 +115,11 @@ const OwnedProperty = ({ web3, account, realEstate, escrow, escrow_address, real
                 duration: 4000,
                 isClosable: true,
             });
-            loadOwnedProperties()
+            if (!prop.sold) {
+                await addInFirebase(prop.propId);
+            }
+            loadOwnedProperties();
+            setTxLoading(false);
             router.push('/listed-property');
         }
         catch (error) {
@@ -78,12 +128,69 @@ const OwnedProperty = ({ web3, account, realEstate, escrow, escrow_address, real
                 title: 'Error',
                 description: 'An error occurred listing your Property.',
                 status: 'error',
-                duration: 5000, 
+                duration: 5000,
                 isClosable: true,
             });
         }
         finally {
             console.log("Listed!!!");
+        }
+    }
+    const reListProp = async (prop, price) => {
+        try {
+            setTxLoading(true);
+            const listingPrice = web3.utils.toWei(price.toString(), 'ether');
+            //give approval
+            await (await realEstate.methods.setApprovalForAll(escrow_address, true)).send({
+                from: account,
+            });
+            console.log("Approved!!!!");
+            toast({
+                title: 'Approved',
+                description: 'Approval given to Marketplace!',
+                status: 'success',
+                duration: 4000,
+                isClosable: true,
+            });
+            //transfer nft to contract (relisting)
+            await escrow.methods.nftTransferToContract(prop.propId, listingPrice).send({
+                from: account,
+            });
+            console.log("Transfered!!!!");
+            toast({
+                title: 'Transfered',
+                description: 'Transfered to Contract!',
+                status: 'success',
+                duration: 4000,
+                isClosable: true,
+            });
+            //isListed = true in blockchain
+            const tx = await escrow.methods.listProperty(prop.propId).send({
+                from: account
+            });
+            console.log(tx)
+
+            toast({
+                title: 'Property Re-Listed',
+                description: 'Your Property has been re-listed successfully!',
+                status: 'success',
+                duration: 4000,
+                isClosable: true,
+            });
+            updateInFirebase(prop.propId, false, false, false);
+            loadOwnedProperties()
+            setTxLoading(false);
+            router.push('/listed-property');
+        }
+        catch (err) {
+            console.log(err);
+            toast({
+                title: 'Error',
+                description: 'An error occurred re-listing your Property.',
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+            });
         }
     }
     useEffect(() => {
@@ -103,7 +210,7 @@ const OwnedProperty = ({ web3, account, realEstate, escrow, escrow_address, real
                 {properties.length > 0 ? (
                     properties.map((prop, idx) => (
                         <div key={idx}>
-                            <CardUI prop={prop} listProp={listProp} isNew={idx === properties.length - 1} />
+                            <CardUI prop={prop} listProp={listProp} reListProp={reListProp} isNew={idx === properties.length - 1} isOwned={true} />
                         </div>
                     )).reverse()
                 ) : (
@@ -112,6 +219,13 @@ const OwnedProperty = ({ web3, account, realEstate, escrow, escrow_address, real
                     </main>
                 )}
             </div>
+            <a className='text-center'>
+                {txLoading ? (
+                    <span className="loading loading-dots loading-md"></span>
+                ) : (
+                    <span></span>
+                )}
+            </a>
         </div>
     );
 }

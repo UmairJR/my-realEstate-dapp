@@ -105,6 +105,7 @@ contract Escrow is ReentrancyGuard{
         Property storage prop = props[_propId];
         require(!prop.propertyInfo.isListed, "Already Listed");
         prop.propertyInfo.isListed = true;
+        prop.sold = false;
     }
 
     function getItemCount() public view returns (uint256) {
@@ -172,14 +173,11 @@ contract Escrow is ReentrancyGuard{
     // Cancel Sale (handle earnest deposit)
     // -> if inspection status is not approved, then refund, otherwise send to seller
     function cancelSale(uint256 _propId) public {
+        require(_propId > 0 && _propId <= _propIds.current(), "Item does not exist");
         Property storage prop = props[_propId];
-        if (prop.propertyInfo.isInspected == false) {
-            payable(prop.buyer).transfer(address(this).balance);
-            resetDetails(_propId, true, false); // _propId, _shouldList, _sold
-        } else {
-            payable(prop.seller).transfer(address(this).balance);
-            resetDetails(_propId, false, true); // _propId, _shouldList, _sold
-        }
+        prop.propertyInfo.isInspected = false;
+        require(prop.propertyInfo.isInspected == false);
+        payable(prop.buyer).transfer(prop.price);
     }
 
     function resetDetails(uint256 _propId, bool _shouldList, bool _sold) public {

@@ -32,11 +32,11 @@ const ListCardUI = ({ prop, isNew, isListed, isSold, isPurchased, reListNft }) =
                     </span>
                     {isPurchased ? (
                         isReList ? (
-                            <button className='btn btn-accent' onClick={() => reListNft(prop,newPrice)}>
+                            <button className='btn btn-accent sm:btn-sm md:btn-md lg:btn-md' onClick={() => reListNft(prop,newPrice)}>
                                 List Now
                             </button>
                         ) : (
-                            <button className='btn btn-accent btn-outline' onClick={() => setIsReList(true)}>
+                            <button className='btn btn-accent btn-outline sm:btn-sm md:btn-md lg:btn-md' onClick={() => setIsReList(true)}>
                                 Want to List this Nft?
                             </button>
                         )
